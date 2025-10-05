@@ -365,9 +365,19 @@ EOF
             echo "📋 步骤8: 连接GitHub仓库..."
             git remote add origin "$repo_url"
             
-            # 步骤8: 创建main分支
-            echo "📋 步骤9: 创建main分支..."
-            git checkout -b main
+            # 步骤8: 检查并创建main分支
+            echo "📋 步骤9: 检查分支状态..."
+            current_branch=$(git branch --show-current)
+            if [ -z "$current_branch" ]; then
+                echo "📋 创建main分支..."
+                git checkout -b main
+            else
+                echo "📋 当前分支: $current_branch"
+                if [ "$current_branch" != "main" ]; then
+                    echo "📋 重命名分支为main..."
+                    git branch -m main
+                fi
+            fi
             
             # 步骤9: 配置Git推送设置
             echo "📋 步骤10: 配置网络设置..."
@@ -378,7 +388,26 @@ EOF
             # 步骤10: 推送代码
             echo "📋 步骤11: 推送代码到GitHub..."
             echo "📡 推送分支: main"
-            git push -u origin main
+            
+            # 尝试推送，如果失败则提供解决方案
+            if ! git push -u origin main; then
+                echo ""
+                echo "❌ 推送失败，可能的原因："
+                echo "   1️⃣ 网络连接问题"
+                echo "   2️⃣ GitHub仓库不存在"
+                echo "   3️⃣ 认证问题"
+                echo ""
+                echo "💡 解决方案："
+                echo "   1️⃣ 检查网络连接"
+                echo "   2️⃣ 确认GitHub仓库已创建"
+                echo "   3️⃣ 手动推送: git push -u origin main"
+                echo ""
+                echo "🔧 手动推送命令："
+                echo "   cd $(pwd)"
+                echo "   git push -u origin main"
+            else
+                echo "✅ 推送成功！"
+            fi
             
             echo ""
             echo "🎉 项目创建并上传完成！"
