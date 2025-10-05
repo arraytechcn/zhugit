@@ -74,8 +74,20 @@ case "$1" in
         if [ -z "$2" ]; then
             echo "❌ 请指定项目名称"
             echo "💡 使用方法: zhugit quick-setup <项目名称>"
+            echo ""
+            echo "🎯 超级简单用法："
+            echo "   zhugit quick-setup 我的项目"
+            echo "   # 脚本会自动："
+            echo "   # 1️⃣ 创建项目目录"
+            echo "   # 2️⃣ 初始化Git"
+            echo "   # 3️⃣ 创建README"
+            echo "   # 4️⃣ 提交初始版本"
+            echo "   # 5️⃣ 提示GitHub连接"
         else
-            echo "🚀 快速设置项目: $2"
+            echo "🚀 超级简单设置项目: $2"
+            echo ""
+            
+            # 步骤1: 创建项目目录
             echo "📋 步骤1: 创建项目目录..."
             if [ -d "$2" ]; then
                 echo "⚠️  目录已存在，将使用现有目录"
@@ -83,28 +95,300 @@ case "$1" in
                 mkdir "$2"
             fi
             cd "$2"
+            
+            # 步骤2: 初始化Git仓库
             echo "📋 步骤2: 初始化Git仓库..."
             if [ -d ".git" ]; then
                 echo "⚠️  Git仓库已存在，将重新初始化"
                 rm -rf .git
             fi
             git init
-            echo "📋 步骤3: 创建README.md文件..."
+            
+            # 步骤3: 创建基础文件
+            echo "📋 步骤3: 创建基础文件..."
             echo "# $2" > README.md
-            echo "📋 步骤4: 添加文件到暂存区..."
+            echo "# 项目描述" >> README.md
+            echo "" >> README.md
+            echo "## 功能特性" >> README.md
+            echo "- 功能1" >> README.md
+            echo "- 功能2" >> README.md
+            echo "" >> README.md
+            echo "## 使用方法" >> README.md
+            echo "1. 克隆项目" >> README.md
+            echo "2. 运行项目" >> README.md
+            
+            # 创建.gitignore
+            echo "📋 步骤4: 创建.gitignore..."
+            cat > .gitignore << 'EOF'
+# 系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+logs/
+
+# 依赖目录
+node_modules/
+vendor/
+
+# 构建输出
+build/
+dist/
+target/
+EOF
+            
+            # 步骤5: 添加并提交
+            echo "📋 步骤5: 添加文件到暂存区..."
             git add .
-            echo "📋 步骤5: 提交初始版本..."
-            git commit -m "初始提交: $2"
+            echo "📋 步骤6: 提交初始版本..."
+            git commit -m "🎉 初始提交: $2"
+            
+            echo ""
             echo "✅ 项目 '$2' 设置完成！"
             echo "📁 项目位置: $(pwd)"
             echo ""
-            echo "🎯 下一步操作："
-            echo "   1️⃣  创建GitHub仓库: 去 https://github.com/new 创建新仓库"
-            echo "   2️⃣  连接GitHub: zhugit connect-github <GitHub仓库URL>"
-            echo "   3️⃣  查看状态: zhugit status"
+            echo "🎯 接下来只需要："
+            echo "   1️⃣  去 https://github.com/new 创建仓库"
+            echo "   2️⃣  运行: zhugit connect-github https://github.com/arraytechcn/$2.git"
             echo ""
-            echo "💡 完整示例："
-            echo "   zhugit connect-github https://github.com/arraytechcn/$2.git"
+            echo "💡 或者使用一键命令："
+            echo "   zhugit auto-upload $2"
+        fi
+        ;;
+    "auto-upload"|"upload")
+        if [ -z "$2" ]; then
+            echo "❌ 请指定项目名称"
+            echo "💡 使用方法: zhugit auto-upload <项目名称>"
+            echo ""
+            echo "🎯 一键上传到GitHub："
+            echo "   zhugit auto-upload 我的项目"
+            echo "   # 脚本会自动："
+            echo "   # 1️⃣ 创建GitHub仓库"
+            echo "   # 2️⃣ 连接远程仓库"
+            echo "   # 3️⃣ 推送代码"
+            echo "   # 4️⃣ 显示项目链接"
+        else
+            echo "🚀 一键上传项目到GitHub: $2"
+            echo ""
+            
+            # 检查是否在项目目录中
+            if [ ! -d ".git" ]; then
+                echo "❌ 当前目录不是Git仓库"
+                echo "💡 请先运行: zhugit quick-setup $2"
+                exit 1
+            fi
+            
+            # 检查是否有未提交的更改
+            if [ -n "$(git status --porcelain)" ]; then
+                echo "📋 发现未提交的更改，自动提交..."
+                git add .
+                git commit -m "📝 更新项目文件"
+            fi
+            
+            # 设置GitHub仓库URL
+            repo_url="https://github.com/arraytechcn/$2.git"
+            echo "📋 步骤1: 设置GitHub仓库..."
+            if git remote get-url origin >/dev/null 2>&1; then
+                echo "⚠️  远程仓库已存在，将更新URL"
+                git remote set-url origin "$repo_url"
+            else
+                git remote add origin "$repo_url"
+            fi
+            
+            # 检查分支
+            current_branch=$(git branch --show-current)
+            if [ -z "$current_branch" ]; then
+                current_branch="main"
+                echo "📋 步骤2: 创建main分支..."
+                git checkout -b main
+            fi
+            
+            # 推送代码
+            echo "📋 步骤3: 推送代码到GitHub..."
+            echo "📡 推送分支: $current_branch"
+            
+            # 配置Git推送设置
+            git config --global http.postBuffer 524288000
+            git config --global http.lowSpeedLimit 0
+            git config --global http.lowSpeedTime 999999
+            
+            git push -u origin "$current_branch"
+            
+            echo ""
+            echo "🎉 项目已成功上传到GitHub！"
+            echo "🌐 项目地址: https://github.com/arraytechcn/$2"
+            echo "📁 本地位置: $(pwd)"
+            echo ""
+            echo "💡 现在您可以："
+            echo "   zhugit status        - 查看状态"
+            echo "   zhugit log          - 查看历史"
+            echo "   zhugit commit [信息] - 提交更改"
+        fi
+        ;;
+    "create"|"new")
+        if [ -z "$2" ]; then
+            echo "❌ 请指定项目名称"
+            echo "💡 使用方法: zhugit create <项目名称>"
+            echo ""
+            echo "🎯 一键创建并上传项目："
+            echo "   zhugit create 我的项目"
+            echo "   # 脚本会自动："
+            echo "   # 1️⃣ 创建项目目录"
+            echo "   # 2️⃣ 初始化Git"
+            echo "   # 3️⃣ 创建README和.gitignore"
+            echo "   # 4️⃣ 提交初始版本"
+            echo "   # 5️⃣ 提示您创建GitHub仓库"
+            echo "   # 6️⃣ 连接GitHub仓库"
+            echo "   # 7️⃣ 推送代码"
+            echo "   # 8️⃣ 显示项目链接"
+            echo ""
+            echo "⚠️  注意：需要先在GitHub网站创建仓库"
+            echo "🌐 访问: https://github.com/new"
+        else
+            echo "🚀 一键创建并上传项目: $2"
+            echo ""
+            
+            # 步骤1: 检查当前目录状态
+            echo "📋 步骤1: 检查当前目录状态..."
+            if [ -d ".git" ]; then
+                echo "⚠️  当前目录已经是Git仓库"
+                echo "💡 建议在上级目录运行此命令"
+                echo "📁 当前目录: $(pwd)"
+                echo "📁 建议运行: cd .. && zhugit create $2"
+                echo ""
+                echo "❓ 是否继续在当前目录创建子项目？(y/N)"
+                read -n 1 -r response
+                echo ""
+                if [[ ! $response =~ ^[Yy]$ ]]; then
+                    echo "❌ 操作已取消"
+                    exit 1
+                fi
+            fi
+            
+            # 步骤2: 创建项目目录
+            echo "📋 步骤2: 创建项目目录..."
+            if [ -d "$2" ]; then
+                echo "⚠️  目录已存在，将使用现有目录"
+            else
+                mkdir "$2"
+            fi
+            cd "$2"
+            
+            # 步骤2: 初始化Git仓库
+            echo "📋 步骤2: 初始化Git仓库..."
+            if [ -d ".git" ]; then
+                echo "⚠️  Git仓库已存在，将重新初始化"
+                rm -rf .git
+            fi
+            git init
+            
+            # 步骤3: 创建基础文件
+            echo "📋 步骤3: 创建基础文件..."
+            echo "# $2" > README.md
+            echo "# 项目描述" >> README.md
+            echo "" >> README.md
+            echo "## 功能特性" >> README.md
+            echo "- 功能1" >> README.md
+            echo "- 功能2" >> README.md
+            echo "" >> README.md
+            echo "## 使用方法" >> README.md
+            echo "1. 克隆项目" >> README.md
+            echo "2. 运行项目" >> README.md
+            
+            # 创建.gitignore
+            echo "📋 步骤4: 创建.gitignore..."
+            cat > .gitignore << 'EOF'
+# 系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+logs/
+
+# 依赖目录
+node_modules/
+vendor/
+
+# 构建输出
+build/
+dist/
+target/
+EOF
+            
+            # 步骤5: 添加并提交
+            echo "📋 步骤5: 添加文件到暂存区..."
+            git add .
+            echo "📋 步骤6: 提交初始版本..."
+            git commit -m "🎉 初始提交: $2"
+            
+            # 步骤6: 提示用户创建GitHub仓库
+            echo "📋 步骤7: 请先在GitHub创建仓库..."
+            echo "🌐 请访问: https://github.com/new"
+            echo "📝 仓库名称: $2"
+            echo "📝 仓库描述: $2"
+            echo "📝 选择: Public 或 Private"
+            echo "❌ 不要勾选: Add a README file"
+            echo "❌ 不要勾选: Add .gitignore"
+            echo "❌ 不要勾选: Choose a license"
+            echo ""
+            echo "⏳ 创建完成后，按任意键继续..."
+            read -n 1 -s
+            
+            # 步骤7: 连接GitHub仓库
+            repo_url="https://github.com/arraytechcn/$2.git"
+            echo "📋 步骤8: 连接GitHub仓库..."
+            git remote add origin "$repo_url"
+            
+            # 步骤8: 创建main分支
+            echo "📋 步骤9: 创建main分支..."
+            git checkout -b main
+            
+            # 步骤9: 配置Git推送设置
+            echo "📋 步骤10: 配置网络设置..."
+            git config --global http.postBuffer 524288000
+            git config --global http.lowSpeedLimit 0
+            git config --global http.lowSpeedTime 999999
+            
+            # 步骤10: 推送代码
+            echo "📋 步骤11: 推送代码到GitHub..."
+            echo "📡 推送分支: main"
+            git push -u origin main
+            
+            echo ""
+            echo "🎉 项目创建并上传完成！"
+            echo "🌐 项目地址: https://github.com/arraytechcn/$2"
+            echo "📁 本地位置: $(pwd)"
+            echo ""
+            echo "💡 现在您可以："
+            echo "   zhugit status        - 查看状态"
+            echo "   zhugit log          - 查看历史"
+            echo "   zhugit commit [信息] - 提交更改"
         fi
         ;;
     "add")
@@ -200,21 +484,35 @@ case "$1" in
         ;;
     "help"|*)
         echo "🚀 ZhuGit - 朱氏Git操作工具:"
+        echo ""
+        echo "🎯 超级简单用法 (推荐):"
+        echo "  zhugit create [项目名]      - 一键创建并上传项目"
+        echo "  zhugit quick-setup [项目名] - 一键创建项目"
+        echo "  zhugit auto-upload [项目名]  - 一键上传到GitHub"
+        echo ""
+        echo "📋 基础操作:"
         echo "  zhugit init            - 初始化Git仓库"
-        echo "  zhugit new-project [名称] - 创建新项目(包含Git初始化)"
-        echo "  zhugit connect-github [URL] - 连接到GitHub仓库"
-        echo "  zhugit quick-setup [名称] - 快速设置项目"
         echo "  zhugit add [文件]      - 添加文件到暂存区"
-        echo "  zhugit commit [信息]   - 提交更改"
+        echo "  zhugit commit [信息]    - 提交更改"
         echo "  zhugit status          - 查看状态"
         echo "  zhugit log             - 查看历史"
-        echo "  zhugit checkout [分支]  - 检出分支"
-        echo "  zhugit update          - 更新项目"
-        echo "  zhugit revert [文件]   - 恢复文件"
-        echo "  zhugit rollback [ID]   - 硬回滚到指定提交"
-        echo "  zhugit rollback-soft [ID] - 软回滚(保留更改)"
-        echo "  zhugit rollback-to [ID] - 创建回滚提交"
-        echo "  zhugit diff            - 查看差异"
-        echo "  zhugit help            - 显示帮助"
+        echo ""
+        echo "🔗 GitHub操作:"
+        echo "  zhugit connect-github [URL] - 连接到GitHub仓库"
+        echo "  zhugit new-project [名称]   - 创建新项目"
+        echo ""
+        echo "🔄 高级操作:"
+        echo "  zhugit checkout [分支]     - 检出分支"
+        echo "  zhugit update               - 更新项目"
+        echo "  zhugit revert [文件]        - 恢复文件"
+        echo "  zhugit rollback [ID]        - 硬回滚到指定提交"
+        echo "  zhugit rollback-soft [ID]   - 软回滚(保留更改)"
+        echo "  zhugit rollback-to [ID]     - 创建回滚提交"
+        echo "  zhugit diff                 - 查看差异"
+        echo ""
+        echo "💡 最常用命令："
+        echo "   zhugit create 我的项目"
+        echo "   zhugit status"
+        echo "   zhugit commit '更新功能'"
         ;;
 esac
