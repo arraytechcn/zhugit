@@ -37,20 +37,37 @@ case "$1" in
             echo "❌ 请指定GitHub仓库地址"
             echo "💡 使用方法: zhugit connect-github <GitHub仓库URL>"
             echo "📋 示例: zhugit connect-github https://github.com/username/repo.git"
+            echo ""
+            echo "🎯 完整流程："
+            echo "   1️⃣  zhugit quick-setup 项目名称"
+            echo "   2️⃣  去 https://github.com/new 创建仓库"
+            echo "   3️⃣  zhugit connect-github https://github.com/用户名/仓库名.git"
         else
             echo "🔗 连接到GitHub仓库: $2"
-            git remote add origin "$2"
+            echo "📋 步骤1: 检查并添加远程仓库..."
+            if git remote get-url origin >/dev/null 2>&1; then
+                echo "⚠️  远程仓库已存在，将更新URL"
+                git remote set-url origin "$2"
+            else
+                git remote add origin "$2"
+            fi
             
             # 检查当前分支名称
             current_branch=$(git branch --show-current)
             if [ -z "$current_branch" ]; then
                 current_branch="main"
+                echo "📋 步骤2: 创建main分支..."
+                git checkout -b main
             fi
             
+            echo "📋 步骤3: 推送代码到GitHub..."
             echo "📡 推送分支: $current_branch"
             git push -u origin "$current_branch"
             echo "✅ GitHub连接完成！"
             echo "📡 远程仓库: $2"
+            echo ""
+            echo "🎉 项目已成功上传到GitHub！"
+            echo "🌐 查看项目: $2"
         fi
         ;;
     "quick-setup"|"setup")
@@ -59,17 +76,35 @@ case "$1" in
             echo "💡 使用方法: zhugit quick-setup <项目名称>"
         else
             echo "🚀 快速设置项目: $2"
-            mkdir "$2"
+            echo "📋 步骤1: 创建项目目录..."
+            if [ -d "$2" ]; then
+                echo "⚠️  目录已存在，将使用现有目录"
+            else
+                mkdir "$2"
+            fi
             cd "$2"
+            echo "📋 步骤2: 初始化Git仓库..."
+            if [ -d ".git" ]; then
+                echo "⚠️  Git仓库已存在，将重新初始化"
+                rm -rf .git
+            fi
             git init
+            echo "📋 步骤3: 创建README.md文件..."
             echo "# $2" > README.md
+            echo "📋 步骤4: 添加文件到暂存区..."
             git add .
+            echo "📋 步骤5: 提交初始版本..."
             git commit -m "初始提交: $2"
             echo "✅ 项目 '$2' 设置完成！"
             echo "📁 项目位置: $(pwd)"
-            echo "💡 接下来可以："
-            echo "   zhugit connect-github <GitHub仓库URL>  - 连接到GitHub"
-            echo "   zhugit status                         - 查看状态"
+            echo ""
+            echo "🎯 下一步操作："
+            echo "   1️⃣  创建GitHub仓库: 去 https://github.com/new 创建新仓库"
+            echo "   2️⃣  连接GitHub: zhugit connect-github <GitHub仓库URL>"
+            echo "   3️⃣  查看状态: zhugit status"
+            echo ""
+            echo "💡 完整示例："
+            echo "   zhugit connect-github https://github.com/arraytechcn/$2.git"
         fi
         ;;
     "add")
