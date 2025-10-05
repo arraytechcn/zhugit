@@ -13,6 +13,57 @@ case "$1" in
         echo "   zhugit commit [信息]  - 提交更改"
         echo "   zhugit status        - 查看状态"
         ;;
+    "new-project"|"new")
+        if [ -z "$2" ]; then
+            echo "❌ 请指定项目名称"
+            echo "💡 使用方法: zhugit new-project <项目名称>"
+        else
+            echo "🚀 创建新项目: $2"
+            mkdir "$2"
+            cd "$2"
+            git init
+            echo "# $2" > README.md
+            git add .
+            git commit -m "初始提交: $2"
+            echo "✅ 新项目 '$2' 创建完成！"
+            echo "📁 项目位置: $(pwd)"
+            echo "💡 接下来可以："
+            echo "   zhugit status        - 查看状态"
+            echo "   zhugit log          - 查看历史"
+        fi
+        ;;
+    "connect-github"|"connect")
+        if [ -z "$2" ]; then
+            echo "❌ 请指定GitHub仓库地址"
+            echo "💡 使用方法: zhugit connect-github <GitHub仓库URL>"
+            echo "📋 示例: zhugit connect-github https://github.com/username/repo.git"
+        else
+            echo "🔗 连接到GitHub仓库: $2"
+            git remote add origin "$2"
+            git push -u origin main
+            echo "✅ GitHub连接完成！"
+            echo "📡 远程仓库: $2"
+        fi
+        ;;
+    "quick-setup"|"setup")
+        if [ -z "$2" ]; then
+            echo "❌ 请指定项目名称"
+            echo "💡 使用方法: zhugit quick-setup <项目名称>"
+        else
+            echo "🚀 快速设置项目: $2"
+            mkdir "$2"
+            cd "$2"
+            git init
+            echo "# $2" > README.md
+            git add .
+            git commit -m "初始提交: $2"
+            echo "✅ 项目 '$2' 设置完成！"
+            echo "📁 项目位置: $(pwd)"
+            echo "💡 接下来可以："
+            echo "   zhugit connect-github <GitHub仓库URL>  - 连接到GitHub"
+            echo "   zhugit status                         - 查看状态"
+        fi
+        ;;
     "add")
         if [ -z "$2" ]; then
             echo "📁 添加所有文件到暂存区..."
@@ -107,6 +158,9 @@ case "$1" in
     "help"|*)
         echo "🚀 ZhuGit - 朱氏Git操作工具:"
         echo "  zhugit init            - 初始化Git仓库"
+        echo "  zhugit new-project [名称] - 创建新项目(包含Git初始化)"
+        echo "  zhugit connect-github [URL] - 连接到GitHub仓库"
+        echo "  zhugit quick-setup [名称] - 快速设置项目"
         echo "  zhugit add [文件]      - 添加文件到暂存区"
         echo "  zhugit commit [信息]   - 提交更改"
         echo "  zhugit status          - 查看状态"
