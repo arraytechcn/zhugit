@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# ZhuGit - 朱氏Git操作工具
+# 使用方法: zhugit [命令] [参数]
+
+case "$1" in
+    "init")
+        echo "🚀 初始化Git仓库..."
+        git init
+        echo "✅ Git仓库初始化完成！"
+        echo "💡 接下来可以："
+        echo "   zhugit add [文件]     - 添加文件到暂存区"
+        echo "   zhugit commit [信息]  - 提交更改"
+        echo "   zhugit status        - 查看状态"
+        ;;
+    "add")
+        if [ -z "$2" ]; then
+            echo "📁 添加所有文件到暂存区..."
+            git add .
+        else
+            echo "📁 添加文件到暂存区: $2"
+            git add "$2"
+        fi
+        echo "✅ 文件已添加到暂存区"
+        ;;
+    "checkout"|"co")
+        echo "📥 检出项目..."
+        git checkout "$2"
+        ;;
+    "update"|"up")
+        echo "🔄 更新项目..."
+        git pull local main
+        ;;
+    "commit"|"ci")
+        echo "💾 提交更改..."
+        git add .
+        git commit -m "$2"
+        git push local main
+        echo "✅ 提交完成！"
+        ;;
+    "status"|"st")
+        echo "📊 项目状态:"
+        git status --short
+        ;;
+    "log"|"history")
+        echo "📈 提交历史:"
+        git log --oneline -10
+        ;;
+    "revert")
+        echo "↩️ 恢复更改..."
+        git checkout -- "$2"
+        ;;
+    "rollback"|"rb")
+        if [ -z "$2" ]; then
+            echo "❌ 请指定要回滚到的提交ID"
+            echo "💡 使用方法: zhugit rollback <提交ID>"
+            echo "📋 查看可用提交: zhugit log"
+        else
+            echo "🔄 回滚到提交: $2"
+            echo "⚠️  注意：这将删除后续的提交历史"
+            echo "💡 如需保留历史，请使用: zhugit rollback-to <提交ID>"
+            git reset --hard "$2"
+            echo "✅ 回滚完成！"
+        fi
+        ;;
+    "rollback-soft"|"rbs")
+        if [ -z "$2" ]; then
+            echo "❌ 请指定要回滚到的提交ID"
+            echo "💡 使用方法: zhugit rollback-soft <提交ID>"
+            echo "📋 查看可用提交: zhugit log"
+        else
+            echo "🔄 软回滚到提交: $2 (保留更改)"
+            git reset --soft "$2"
+            echo "✅ 软回滚完成！更改已保留在暂存区"
+        fi
+        ;;
+    "rollback-to"|"rbt")
+        if [ -z "$2" ]; then
+            echo "❌ 请指定要回滚到的提交ID"
+            echo "💡 使用方法: zhugit rollback-to <提交ID>"
+            echo "📋 查看可用提交: zhugit log"
+        else
+            echo "🔄 安全回滚到提交: $2 (保留历史记录)"
+            echo "📝 这将创建一个新的回滚提交，保留所有历史"
+            
+            # 获取当前HEAD的提交信息
+            current_commit=$(git rev-parse HEAD)
+            current_message=$(git log --format=%s -1)
+            
+            # 重置到目标提交
+            git reset --hard "$2"
+            
+            # 创建回滚提交
+            git commit --allow-empty -m "🔄 回滚到: $2
+原提交: $current_commit
+原信息: $current_message
+时间: $(date '+%Y-%m-%d %H:%M:%S')"
+            
+            echo "✅ 安全回滚完成！历史记录已保留"
+            echo "📊 新的回滚提交已创建"
+        fi
+        ;;
+    "diff")
+        echo "🔍 查看差异:"
+        git diff
+        ;;
+    "help"|*)
+        echo "🚀 ZhuGit - 朱氏Git操作工具:"
+        echo "  zhugit init            - 初始化Git仓库"
+        echo "  zhugit add [文件]      - 添加文件到暂存区"
+        echo "  zhugit commit [信息]   - 提交更改"
+        echo "  zhugit status          - 查看状态"
+        echo "  zhugit log             - 查看历史"
+        echo "  zhugit checkout [分支]  - 检出分支"
+        echo "  zhugit update          - 更新项目"
+        echo "  zhugit revert [文件]   - 恢复文件"
+        echo "  zhugit rollback [ID]   - 硬回滚到指定提交"
+        echo "  zhugit rollback-soft [ID] - 软回滚(保留更改)"
+        echo "  zhugit rollback-to [ID] - 创建回滚提交"
+        echo "  zhugit diff            - 查看差异"
+        echo "  zhugit help            - 显示帮助"
+        ;;
+esac
