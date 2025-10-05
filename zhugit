@@ -40,7 +40,15 @@ case "$1" in
         else
             echo "🔗 连接到GitHub仓库: $2"
             git remote add origin "$2"
-            git push -u origin main
+            
+            # 检查当前分支名称
+            current_branch=$(git branch --show-current)
+            if [ -z "$current_branch" ]; then
+                current_branch="main"
+            fi
+            
+            echo "📡 推送分支: $current_branch"
+            git push -u origin "$current_branch"
             echo "✅ GitHub连接完成！"
             echo "📡 远程仓库: $2"
         fi
